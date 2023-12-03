@@ -30,10 +30,8 @@ export class CustomEmojiService implements OnApplicationShutdown {
 	constructor(
 		@Inject(DI.redis)
 		private redisClient: Redis.Redis,
-
 		@Inject(DI.emojisRepository)
 		private emojisRepository: EmojisRepository,
-
 		private utilityService: UtilityService,
 		private idService: IdService,
 		private emojiEntityService: EmojiEntityService,
@@ -293,7 +291,7 @@ export class CustomEmojiService implements OnApplicationShutdown {
 
 	@bindThis
 	private normalizeHost(src: string | undefined, noteUserHost: string | null): string | null {
-	// クエリに使うホスト
+		// クエリに使うホスト
 		let host = src === '.' ? null	// .はローカルホスト (ここがマッチするのはリアクションのみ)
 			: src === undefined ? noteUserHost	// ノートなどでホスト省略表記の場合はローカルホスト (ここがリアクションにマッチすることはない)
 			: this.utilityService.isSelfHost(src) ? null	// 自ホスト指定
@@ -386,6 +384,11 @@ export class CustomEmojiService implements OnApplicationShutdown {
 	@bindThis
 	public checkDuplicate(name: string): Promise<boolean> {
 		return this.emojisRepository.exist({ where: { name, host: IsNull() } });
+	}
+
+	@bindThis
+	public checkFileIsInUse(file: MiDriveFile): Promise<boolean> {
+		return this.emojisRepository.exist({ where: { originalUrl: file.url } });
 	}
 
 	@bindThis

@@ -10,6 +10,7 @@ import { DriveService } from '@/core/DriveService.js';
 import { GlobalEventService } from '@/core/GlobalEventService.js';
 import { DI } from '@/di-symbols.js';
 import { RoleService } from '@/core/RoleService.js';
+import { CustomEmojiService } from '@/core/CustomEmojiService.js';
 import { ApiError } from '../../../error.js';
 
 export const meta = {
@@ -33,6 +34,12 @@ export const meta = {
 			code: 'ACCESS_DENIED',
 			id: '5eb8d909-2540-4970-90b8-dd6f86088121',
 		},
+
+		fileIsInUse: {
+			message: 'This file is in use with custom emojis.',
+			code: 'FILE_IS_IN_USE',
+			id: 'c4f5b5a4-6b92-4c33-ac66-b806659bb5cf',
+		},
 	},
 } as const;
 
@@ -53,6 +60,7 @@ export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-
 		private driveService: DriveService,
 		private roleService: RoleService,
 		private globalEventService: GlobalEventService,
+		private customEmojiService: CustomEmojiService,
 	) {
 		super(meta, paramDef, async (ps, me) => {
 			const file = await this.driveFilesRepository.findOneBy({ id: ps.fileId });
@@ -63,6 +71,10 @@ export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-
 
 			if (!await this.roleService.isModerator(me) && (file.userId !== me.id)) {
 				throw new ApiError(meta.errors.accessDenied);
+			}
+
+			if (await this.customEmojiService.checkFileIsInUse(file)) {
+				throw new ApiError(meta.errors.fileIsInUse);
 			}
 
 			await this.driveService.deleteFile(file, false, me);

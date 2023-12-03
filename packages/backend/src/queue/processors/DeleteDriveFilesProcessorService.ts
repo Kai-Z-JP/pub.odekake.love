@@ -6,10 +6,11 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { MoreThan } from 'typeorm';
 import { DI } from '@/di-symbols.js';
-import type { UsersRepository, DriveFilesRepository, MiDriveFile } from '@/models/_.js';
+import type { DriveFilesRepository, MiDriveFile, UsersRepository } from '@/models/_.js';
 import type Logger from '@/logger.js';
 import { DriveService } from '@/core/DriveService.js';
 import { bindThis } from '@/decorators.js';
+import { CustomEmojiService } from '@/core/CustomEmojiService.js';
 import { QueueLoggerService } from '../QueueLoggerService.js';
 import type * as Bull from 'bullmq';
 import type { DbJobDataWithUser } from '../types.js';
@@ -21,12 +22,11 @@ export class DeleteDriveFilesProcessorService {
 	constructor(
 		@Inject(DI.usersRepository)
 		private usersRepository: UsersRepository,
-
 		@Inject(DI.driveFilesRepository)
 		private driveFilesRepository: DriveFilesRepository,
-
 		private driveService: DriveService,
 		private queueLoggerService: QueueLoggerService,
+		private customEmojiService: CustomEmojiService,
 	) {
 		this.logger = this.queueLoggerService.logger.createSubLogger('delete-drive-files');
 	}
@@ -44,7 +44,7 @@ export class DeleteDriveFilesProcessorService {
 		let cursor: MiDriveFile['id'] | null = null;
 
 		while (true) {
-			const files = await this.driveFilesRepository.find({
+			let files = await this.driveFilesRepository.find({
 				where: {
 					userId: user.id,
 					...(cursor ? { id: MoreThan(cursor) } : {}),
@@ -61,6 +61,8 @@ export class DeleteDriveFilesProcessorService {
 			}
 
 			cursor = files.at(-1)?.id ?? null;
+
+			files = files.filter(async f => !(await this.customEmojiService.checkFileIsInUse(f)));
 
 			for (const file of files) {
 				await this.driveService.deleteFileSync(file);

@@ -14,6 +14,7 @@ import type { MiNote } from '@/models/Note.js';
 import { EmailService } from '@/core/EmailService.js';
 import { bindThis } from '@/decorators.js';
 import { SearchService } from '@/core/SearchService.js';
+import { CustomEmojiService } from '@/core/CustomEmojiService.js';
 import { QueueLoggerService } from '../QueueLoggerService.js';
 import type * as Bull from 'bullmq';
 import type { DbUserDeleteJobData } from '../types.js';
@@ -25,20 +26,17 @@ export class DeleteAccountProcessorService {
 	constructor(
 		@Inject(DI.usersRepository)
 		private usersRepository: UsersRepository,
-
 		@Inject(DI.userProfilesRepository)
 		private userProfilesRepository: UserProfilesRepository,
-
 		@Inject(DI.notesRepository)
 		private notesRepository: NotesRepository,
-
 		@Inject(DI.driveFilesRepository)
 		private driveFilesRepository: DriveFilesRepository,
-
 		private driveService: DriveService,
 		private emailService: EmailService,
 		private queueLoggerService: QueueLoggerService,
 		private searchService: SearchService,
+		private customEmojiService: CustomEmojiService,
 	) {
 		this.logger = this.queueLoggerService.logger.createSubLogger('delete-account');
 	}
@@ -87,7 +85,7 @@ export class DeleteAccountProcessorService {
 			let cursor: MiDriveFile['id'] | null = null;
 
 			while (true) {
-				const files = await this.driveFilesRepository.find({
+				let files = await this.driveFilesRepository.find({
 					where: {
 						userId: user.id,
 						...(cursor ? { id: MoreThan(cursor) } : {}),
@@ -103,6 +101,8 @@ export class DeleteAccountProcessorService {
 				}
 
 				cursor = files.at(-1)?.id ?? null;
+
+				files = files.filter(async f => !(await this.customEmojiService.checkFileIsInUse(f)));
 
 				for (const file of files) {
 					await this.driveService.deleteFileSync(file);
@@ -123,7 +123,7 @@ export class DeleteAccountProcessorService {
 
 		// soft指定されている場合は物理削除しない
 		if (job.data.soft) {
-		// nop
+			// nop
 		} else {
 			await this.usersRepository.delete(job.data.user.id);
 		}
