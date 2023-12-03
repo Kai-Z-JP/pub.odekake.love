@@ -35,9 +35,9 @@ export const meta = {
 			id: '5eb8d909-2540-4970-90b8-dd6f86088121',
 		},
 
-		fileIsInUse: {
-			message: 'This file is in use with custom emojis.',
-			code: 'FILE_IS_IN_USE',
+		fileIsUsed: {
+			message: 'This file is used as an emoji.',
+			code: 'FILE_IS_USED',
 			id: 'c4f5b5a4-6b92-4c33-ac66-b806659bb5cf',
 		},
 	},
@@ -56,7 +56,6 @@ export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-
 	constructor(
 		@Inject(DI.driveFilesRepository)
 		private driveFilesRepository: DriveFilesRepository,
-
 		private driveService: DriveService,
 		private roleService: RoleService,
 		private globalEventService: GlobalEventService,
@@ -74,7 +73,7 @@ export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-
 			}
 
 			if (await this.customEmojiService.checkFileIsInUse(file)) {
-				throw new ApiError(meta.errors.fileIsInUse);
+				throw new ApiError(meta.errors.fileIsUsed);
 			}
 
 			await this.driveService.deleteFile(file, false, me);
