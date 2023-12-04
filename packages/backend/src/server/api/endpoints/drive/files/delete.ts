@@ -36,7 +36,7 @@ export const meta = {
 		},
 
 		fileIsUsed: {
-			message: 'This file is used as an emoji.',
+			message: 'This image is being used as an emoji',
 			code: 'FILE_IS_USED',
 			id: 'c4f5b5a4-6b92-4c33-ac66-b806659bb5cf',
 		},
