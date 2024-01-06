@@ -63,7 +63,6 @@ export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-
 	constructor(
 		@Inject(DI.notesRepository)
 		private notesRepository: NotesRepository,
-
 		private noteEntityService: NoteEntityService,
 		private roleService: RoleService,
 		private activeUsersChart: ActiveUsersChart,
@@ -134,6 +133,7 @@ export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-
 				redisTimeline = await query.getMany();
 
 				redisTimeline = redisTimeline.filter(note => {
+					if (!me && note.localOnly) return false;
 					if (me && (note.userId === me.id)) {
 						return true;
 					}
