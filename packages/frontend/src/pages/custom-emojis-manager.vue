@@ -148,7 +148,7 @@ const add = async (ev: MouseEvent) => {
 const addAll = async (ev: MouseEvent) => {
 	const files = await selectFiles(ev.currentTarget ?? ev.target, null);
 
-	const promise = Promise.all(files.map(file => os.api('admin/emoji/add', {
+	const promise = Promise.all(files.map(file => misskeyApi('admin/emoji/add', {
 		fileId: file.id,
 	})));
 	promise.then(() => {
