@@ -4,38 +4,37 @@ SPDX-License-Identifier: AGPL-3.0-only
 -->
 
 <template>
-	<button
-		ref="buttonEl"
-		v-ripple="canToggle"
-		class="_button"
-		:class="[$style.root, { [$style.reacted]: note.myReaction == reaction, [$style.canToggle]: canToggle, [$style.small]: defaultStore.state.reactionsDisplaySize === 'small', [$style.large]: defaultStore.state.reactionsDisplaySize === 'large' }]"
-		@click="toggleReaction()"
-		@contextmenu.prevent.stop="menu"
-	>
-		<MkReactionIcon :class="defaultStore.state.limitWidthOfReaction ? $style.limitWidth : ''" :reaction="reaction"
-										:emojiUrl="note.reactionEmojis[reaction.substring(1, reaction.length - 1)]"/>
-		<span :class="$style.count">{{ count }}</span>
-	</button>
+<button
+	ref="buttonEl"
+	v-ripple="canToggle"
+	class="_button"
+	:class="[$style.root, { [$style.reacted]: note.myReaction == reaction, [$style.canToggle]: canToggle, [$style.small]: defaultStore.state.reactionsDisplaySize === 'small', [$style.large]: defaultStore.state.reactionsDisplaySize === 'large' }]"
+	@click="toggleReaction()"
+	@contextmenu.prevent.stop="menu"
+>
+	<MkReactionIcon :class="defaultStore.state.limitWidthOfReaction ? $style.limitWidth : ''" :reaction="reaction" :emojiUrl="note.reactionEmojis[reaction.substring(1, reaction.length - 1)]"/>
+	<span :class="$style.count">{{ count }}</span>
+</button>
 </template>
 
 <script lang="ts" setup>
-import {computed, inject, onMounted, shallowRef, watch} from 'vue';
+import { computed, inject, onMounted, shallowRef, watch } from 'vue';
 import * as Misskey from 'misskey-js';
+import { getUnicodeEmoji } from '@@/js/emojilist.js';
 import MkCustomEmojiDetailedDialog from './MkCustomEmojiDetailedDialog.vue';
 import XDetails from '@/components/MkReactionsViewer.details.vue';
 import MkReactionIcon from '@/components/MkReactionIcon.vue';
 import * as os from '@/os.js';
-import {misskeyApi, misskeyApiGet} from '@/scripts/misskey-api.js';
-import {useTooltip} from '@/scripts/use-tooltip.js';
-import {$i} from '@/account.js';
+import { misskeyApi, misskeyApiGet } from '@/scripts/misskey-api.js';
+import { useTooltip } from '@/scripts/use-tooltip.js';
+import { $i } from '@/account.js';
 import MkReactionEffect from '@/components/MkReactionEffect.vue';
-import {claimAchievement} from '@/scripts/achievements.js';
-import {defaultStore} from '@/store.js';
-import {i18n} from '@/i18n.js';
+import { claimAchievement } from '@/scripts/achievements.js';
+import { defaultStore } from '@/store.js';
+import { i18n } from '@/i18n.js';
 import * as sound from '@/scripts/sound.js';
 import { checkReactionPermissions } from '@/scripts/check-reaction-permissions.js';
 import { customEmojisMap } from '@/custom-emojis.js';
-import { getUnicodeEmoji } from '@/scripts/emojilist.js';
 
 const props = defineProps<{
 	reaction: string;
@@ -115,10 +114,12 @@ async function menu(ev) {
 		text: i18n.ts.info,
 		icon: 'ti ti-info-circle',
 		action: async () => {
-			os.popup(MkCustomEmojiDetailedDialog, {
+			const { dispose } = os.popup(MkCustomEmojiDetailedDialog, {
 				emoji: await misskeyApiGet('emoji', {
 					name: props.reaction.replace(/:/g, '').replace(/@\./, ''),
 				}),
+			}, {
+				closed: () => dispose(),
 			});
 		},
 	}], ev.currentTarget ?? ev.target);
@@ -130,7 +131,9 @@ function anime() {
 	const rect = buttonEl.value.getBoundingClientRect();
 	const x = rect.left + 16;
 	const y = rect.top + (buttonEl.value.offsetHeight / 2);
-	os.popup(MkReactionEffect, {reaction: props.reaction, x, y}, {}, 'end');
+	const { dispose } = os.popup(MkReactionEffect, { reaction: props.reaction, x, y }, {
+		end: () => dispose(),
+	});
 }
 
 watch(() => props.count, (newCount, oldCount) => {
@@ -152,13 +155,15 @@ if (!mock) {
 
 		const users = reactions.map(x => x.user);
 
-		os.popup(XDetails, {
+		const { dispose } = os.popup(XDetails, {
 			showing,
 			reaction: props.reaction,
 			users,
 			count: props.count,
 			targetElement: buttonEl.value,
-		}, {}, 'closed');
+		}, {
+			closed: () => dispose(),
+		});
 	}, 100);
 }
 </script>
@@ -176,7 +181,7 @@ if (!mock) {
 	white-space: nowrap;
 
 	&.canToggle {
-		background: var(--buttonBg);
+		background: var(--MI_THEME-buttonBg);
 
 		&:hover {
 			background: rgba(0, 0, 0, 0.1);
@@ -210,12 +215,12 @@ if (!mock) {
 	}
 
 	&.reacted, &.reacted:hover {
-		background: var(--accentedBg);
-		color: var(--accent);
-		box-shadow: 0 0 0 1px var(--accent) inset;
+		background: var(--MI_THEME-accentedBg);
+		color: var(--MI_THEME-accent);
+		box-shadow: 0 0 0 1px var(--MI_THEME-accent) inset;
 
 		> .count {
-			color: var(--accent);
+			color: var(--MI_THEME-accent);
 		}
 
 		> .icon {
