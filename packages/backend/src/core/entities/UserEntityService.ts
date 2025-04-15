@@ -593,8 +593,8 @@ export class UserEntityService implements OnModuleInit {
 				}))),
 				memo: memo,
 				moderationNote: iAmModerator ? (profile!.moderationNote ?? '') : undefined,
-				emojiCreationCount: emojiCreationCount,
-				emojiDeletionCount: emojiDeletionCount,
+				oskyEmojiCreationCount: emojiCreationCount,
+				oskyEmojiDeletionCount: emojiDeletionCount,
 			} : {}),
 
 			...(isDetailed && (isMe || iAmModerator) ? {

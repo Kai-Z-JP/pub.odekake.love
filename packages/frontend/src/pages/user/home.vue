@@ -127,12 +127,12 @@ SPDX-License-Identifier: AGPL-3.0-only
 							<span>{{ i18n.ts.followers }}</span>
 						</MkA>
 					</div>
-					<div class="status">
-						<div v-if="user.oskyEmojiCreationCount && user.oskyEmojiDeletionCount">
+					<div v-if="user.oskyEmojiCreationCount && user.oskyEmojiDeletionCount" class="status">
+						<div>
 							<b>+ {{ number(user.oskyEmojiCreationCount) }}</b>
 							<span>{{ i18n.ts.emoji }}</span>
 						</div>
-						<div v-if="user.oskyEmojiCreationCount && user.oskyEmojiDeletionCount">
+						<div>
 							<b>- {{ number(user.oskyEmojiDeletionCount) }}</b>
 							<span>{{ i18n.ts.emoji }}</span>
 						</div>
