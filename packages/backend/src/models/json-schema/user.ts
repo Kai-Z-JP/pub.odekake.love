@@ -442,6 +442,14 @@ export const packedUserDetailedNotMeOnlySchema = {
 			type: 'boolean',
 			nullable: false, optional: true,
 		},
+		oskyEmojiCreationCount: {
+			type: 'number',
+			nullable: false, optional: true,
+		},
+		oskyEmojiDeletionCount: {
+			type: 'number',
+			nullable: false, optional: true,
+		},
 		//#endregion
 	},
 } as const;

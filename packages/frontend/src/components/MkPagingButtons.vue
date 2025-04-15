@@ -98,7 +98,6 @@ function onToTailButtonClicked() {
 		border-radius: 9999px;
 		min-width: 2.5em;
 		min-height: 2.5em;
-		max-width: 2.5em;
 		max-height: 2.5em;
 		padding: 4px;
 	}

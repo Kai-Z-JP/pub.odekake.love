@@ -4076,6 +4076,8 @@ export type components = {
       /** @enum {string} */
       notify?: 'normal' | 'none';
       withReplies?: boolean;
+      oskyEmojiCreationCount?: number;
+      oskyEmojiDeletionCount?: number;
     };
     MeDetailedOnly: {
       /** Format: id */

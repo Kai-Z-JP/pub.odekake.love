@@ -31,6 +31,7 @@ import type {
 	MiMeta,
 	MiUserNotePining,
 	MiUserProfile,
+	ModerationLogsRepository,
 	MutingsRepository,
 	RenoteMutingsRepository,
 	UserMemoRepository,
@@ -136,6 +137,9 @@ export class UserEntityService implements OnModuleInit {
 
 		@Inject(DI.userMemosRepository)
 		private userMemosRepository: UserMemoRepository,
+
+		@Inject(DI.moderationLogsRepository)
+		private moderationLogsRepository: ModerationLogsRepository,
 	) {
 	}
 
@@ -401,6 +405,22 @@ export class UserEntityService implements OnModuleInit {
 		return `${this.config.url}/users/${userId}`;
 	}
 
+	@bindThis
+	public async getUserEmojiCreationCount(userId: string): Promise<number> {
+		return await this.moderationLogsRepository.countBy({
+			type: 'addCustomEmoji',
+			userId: userId,
+		});
+	}
+
+	@bindThis
+	public async getUserEmojiDeletionCount(userId: string): Promise<number> {
+		return await this.moderationLogsRepository.countBy({
+			type: 'deleteCustomEmoji',
+			userId: userId,
+		});
+	}
+
 	public async pack<S extends 'MeDetailed' | 'UserDetailedNotMe' | 'UserDetailed' | 'UserLite' = 'UserLite'>(
 		src: MiUser['id'] | MiUser,
 		me?: { id: MiUser['id']; } | null | undefined,
@@ -480,6 +500,9 @@ export class UserEntityService implements OnModuleInit {
 			})) : null;
 
 		const notificationsInfo = isMe && isDetailed ? await this.getNotificationsInfo(user.id) : null;
+
+		const emojiCreationCount = isLocalUser(user) && isDetailed ? await this.getUserEmojiCreationCount(user.id) : undefined;
+		const emojiDeletionCount = isLocalUser(user) && isDetailed ? await this.getUserEmojiDeletionCount(user.id) : undefined;
 
 		const packed = {
 			id: user.id,
@@ -570,6 +593,8 @@ export class UserEntityService implements OnModuleInit {
 				}))),
 				memo: memo,
 				moderationNote: iAmModerator ? (profile!.moderationNote ?? '') : undefined,
+				emojiCreationCount: emojiCreationCount,
+				emojiDeletionCount: emojiDeletionCount,
 			} : {}),
 
 			...(isDetailed && (isMe || iAmModerator) ? {
