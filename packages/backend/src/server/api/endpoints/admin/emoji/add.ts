@@ -70,7 +70,7 @@ export const paramDef = {
 			},
 		},
 	},
-	required: ['name', 'fileId'],
+	required: ['fileId'],
 } as const;
 
 // TODO: ロジックをサービスに切り出す
