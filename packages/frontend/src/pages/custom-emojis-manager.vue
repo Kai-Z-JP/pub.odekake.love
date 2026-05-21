@@ -79,7 +79,6 @@ import MkPagination from '@/components/MkPagination.vue';
 import MkRemoteEmojiEditDialog from '@/components/MkRemoteEmojiEditDialog.vue';
 import MkSwitch from '@/components/MkSwitch.vue';
 import FormSplit from '@/components/form/split.vue';
-import { selectFile, selectFiles } from '@/utility/select-file.js';
 import { selectFile } from '@/utility/drive.js';
 import * as os from '@/os.js';
 import { misskeyApi } from '@/utility/misskey-api.js';
@@ -145,21 +144,28 @@ const add = async () => {
 };
 
 const addAll = async (ev: MouseEvent) => {
-	const files = await selectFiles(ev.currentTarget ?? ev.target, null);
+	const files = await selectFile({
+		anchorElement: ev.currentTarget ?? ev.target,
+		multiple: true,
+	});
 
-	const promise = Promise.all(files.map(file => misskeyApi('admin/emoji/add', {
-		fileId: file.id,
-	})));
+	const promise = Promise.all(
+		files.map((file) =>
+			misskeyApi('admin/emoji/add', {
+				fileId: file.id,
+			}),
+		),
+	);
 	promise.then(() => {
-		emojisPaginationComponent.value.reload();
+		paginator.reload();
 	});
 	os.promiseDialog(promise);
 };
 
 const edit = async (emoji: Misskey.entities.EmojiDetailed) => {
-  const { dispose } = await os.popupAsyncWithDialog(import('./emoji-edit-dialog.vue').then(x => x.default), {
-    emoji: emoji,
-  }, {
+	const { dispose } = await os.popupAsyncWithDialog(import('./emoji-edit-dialog.vue').then(x => x.default), {
+		emoji: emoji,
+	}, {
 		done: result => {
 			if (result.updated) {
 				paginator.updateItem(result.updated.id, (oldEmoji) => ({
