@@ -58,6 +58,8 @@ export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-
 			const query = this.noteReactionsRepository.createQueryBuilder('reaction')
 				.select('reaction.reaction', 'reaction')
 				.addSelect('COUNT(*)', 'count')
+				.leftJoin('reaction.user', 'u')
+				.where('u.host IS NULL')
 				.groupBy('reaction.reaction')
 				.orderBy('count', 'DESC')
 				.limit(ps.limit);
