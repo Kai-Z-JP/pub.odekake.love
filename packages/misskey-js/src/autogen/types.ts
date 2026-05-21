@@ -4487,7 +4487,7 @@ export type components = {
             reactionAndUserPairCache?: string[];
             clippedCount?: number;
             hasPoll?: boolean;
-            myReaction?: string | null;
+            myReaction?: string[] | null;
         };
         NoteDraft: {
             /**
@@ -30653,6 +30653,7 @@ export interface operations {
                 'application/json': {
                     /** Format: misskey:id */
                     noteId: string;
+                    reaction?: string;
                 };
             };
         };

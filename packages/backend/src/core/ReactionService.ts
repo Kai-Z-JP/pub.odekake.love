@@ -171,23 +171,26 @@ export class ReactionService {
 			reaction,
 		};
 
+		// リモートノートは1リアクションのみ (フェデレーション互換性のため)
+		if (note.userHost !== null) {
+			const existingReaction = await this.noteReactionsRepository.findOneBy({
+				noteId: note.id,
+				userId: user.id,
+			});
+			if (existingReaction) {
+				if (existingReaction.reaction === reaction) {
+					throw new IdentifiableError('51c42bb4-931a-456b-bff7-e5a8a70dd298');
+				}
+				await this.delete(user, note, existingReaction.reaction);
+			}
+		}
+
 		try {
 			await this.noteReactionsRepository.insert(record);
 		} catch (e) {
 			if (isDuplicateKeyValueError(e)) {
-				const exists = await this.noteReactionsRepository.findOneByOrFail({
-					noteId: note.id,
-					userId: user.id,
-				});
-
-				if (exists.reaction !== reaction) {
-					// 別のリアクションがすでにされていたら置き換える
-					await this.delete(user, note);
-					await this.noteReactionsRepository.insert(record);
-				} else {
-					// 同じリアクションがすでにされていたらエラー
-					throw new IdentifiableError('51c42bb4-931a-456b-bff7-e5a8a70dd298');
-				}
+				// 同じ絵文字リアクションがすでにされていたらエラー
+				throw new IdentifiableError('51c42bb4-931a-456b-bff7-e5a8a70dd298');
 			} else {
 				throw e;
 			}
@@ -286,55 +289,57 @@ export class ReactionService {
 	}
 
 	@bindThis
-	public async delete(user: { id: MiUser['id']; host: MiUser['host']; isBot: MiUser['isBot']; }, note: MiNote) {
-		// if already unreacted
-		const exist = await this.noteReactionsRepository.findOneBy({
-			noteId: note.id,
-			userId: user.id,
-		});
+	public async delete(user: { id: MiUser['id']; host: MiUser['host']; isBot: MiUser['isBot']; }, note: MiNote, reaction?: string) {
+		const findCriteria = reaction
+			? { noteId: note.id, userId: user.id, reaction }
+			: { noteId: note.id, userId: user.id };
 
-		if (exist == null) {
+		const exists = reaction
+			? [await this.noteReactionsRepository.findOneBy(findCriteria)].filter(Boolean) as MiNoteReaction[]
+			: await this.noteReactionsRepository.findBy(findCriteria);
+
+		if (exists.length === 0) {
 			throw new IdentifiableError('60527ec9-b4cb-4a88-a6bd-32d3ad26817d', 'not reacted');
 		}
 
-		// Delete reaction
-		const result = await this.noteReactionsRepository.delete(exist.id);
+		for (const exist of exists) {
+			// Delete reaction
+			const result = await this.noteReactionsRepository.delete(exist.id);
 
-		if (result.affected !== 1) {
-			throw new IdentifiableError('60527ec9-b4cb-4a88-a6bd-32d3ad26817d', 'not reacted');
-		}
+			if (result.affected !== 1) continue;
 
-		// Decrement reactions count
-		if (this.meta.enableReactionsBuffering) {
-			await this.reactionsBufferingService.delete(note.id, user.id, exist.reaction);
-		} else {
-			const sql = `jsonb_set("reactions", '{${exist.reaction}}', (COALESCE("reactions"->>'${exist.reaction}', '0')::int - 1)::text::jsonb)`;
-			await this.notesRepository.createQueryBuilder().update()
-				.set({
-					reactions: () => sql,
-					reactionAndUserPairCache: () => `array_remove("reactionAndUserPairCache", '${user.id}/${exist.reaction}')`,
-				})
-				.where('id = :id', { id: note.id })
-				.execute();
-		}
-
-		this.globalEventService.publishNoteStream(note, 'unreacted', {
-			reaction: this.decodeReaction(exist.reaction).reaction,
-			userId: user.id,
-		});
-
-		//#region 配信
-		if (this.userEntityService.isLocalUser(user) && !note.localOnly) {
-			const content = this.apRendererService.addContext(this.apRendererService.renderUndo(await this.apRendererService.renderLike(exist, note), user));
-			const dm = this.apDeliverManagerService.createDeliverManager(user, content);
-			if (note.userHost !== null) {
-				const reactee = await this.usersRepository.findOneBy({ id: note.userId });
-				dm.addDirectRecipe(reactee as MiRemoteUser);
+			// Decrement reactions count
+			if (this.meta.enableReactionsBuffering) {
+				await this.reactionsBufferingService.delete(note.id, user.id, exist.reaction);
+			} else {
+				const sql = `jsonb_set("reactions", '{${exist.reaction}}', (COALESCE("reactions"->>'${exist.reaction}', '0')::int - 1)::text::jsonb)`;
+				await this.notesRepository.createQueryBuilder().update()
+					.set({
+						reactions: () => sql,
+						reactionAndUserPairCache: () => `array_remove("reactionAndUserPairCache", '${user.id}/${exist.reaction}')`,
+					})
+					.where('id = :id', { id: note.id })
+					.execute();
 			}
-			dm.addFollowersRecipe();
-			trackPromise(dm.execute());
+
+			this.globalEventService.publishNoteStream(note, 'unreacted', {
+				reaction: this.decodeReaction(exist.reaction).reaction,
+				userId: user.id,
+			});
+
+			//#region 配信
+			if (this.userEntityService.isLocalUser(user) && !note.localOnly) {
+				const content = this.apRendererService.addContext(this.apRendererService.renderUndo(await this.apRendererService.renderLike(exist, note), user));
+				const dm = this.apDeliverManagerService.createDeliverManager(user, content);
+				if (note.userHost !== null) {
+					const reactee = await this.usersRepository.findOneBy({ id: note.userId });
+					dm.addDirectRecipe(reactee as MiRemoteUser);
+				}
+				dm.addFollowersRecipe();
+				trackPromise(dm.execute());
+			}
+			//#endregion
 		}
-		//#endregion
 	}
 
 	/**

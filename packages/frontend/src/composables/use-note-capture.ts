@@ -240,7 +240,10 @@ export function useNoteCapture(props: {
 		$note.reactionCount += 1;
 
 		if ($i && (ctx.userId === $i.id)) {
-			$note.myReaction = normalizedName;
+			const current = $note.myReaction ?? [];
+			if (!current.includes(normalizedName)) {
+				$note.myReaction = [...current, normalizedName];
+			}
 		}
 	}
 
@@ -259,7 +262,8 @@ export function useNoteCapture(props: {
 		if ($note.reactions[normalizedName] === 0) delete $note.reactions[normalizedName];
 
 		if ($i && (ctx.userId === $i.id)) {
-			$note.myReaction = null;
+			const filtered = ($note.myReaction ?? []).filter(r => r !== normalizedName);
+			$note.myReaction = filtered.length > 0 ? filtered : null;
 		}
 	}
 

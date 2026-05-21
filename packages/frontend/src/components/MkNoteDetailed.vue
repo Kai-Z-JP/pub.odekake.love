@@ -171,8 +171,9 @@ SPDX-License-Identifier: AGPL-3.0-only
 				</button>
 				<button ref="reactButton" :class="$style.noteFooterButton" class="_button" @click="toggleReact()">
 					<i v-if="appearNote.reactionAcceptance === 'likeOnly' && $appearNote.myReaction != null" class="ti ti-heart-filled" style="color: var(--MI_THEME-love);"></i>
-					<i v-else-if="$appearNote.myReaction != null" class="ti ti-minus" style="color: var(--MI_THEME-accent);"></i>
 					<i v-else-if="appearNote.reactionAcceptance === 'likeOnly'" class="ti ti-heart"></i>
+					<i v-else-if="$appearNote.myReaction != null && appearNote.uri != null" class="ti ti-minus" style="color: var(--MI_THEME-accent);"></i>
+					<i v-else-if="$appearNote.myReaction != null" class="ti ti-plus" style="color: var(--MI_THEME-accent);"></i>
 					<i v-else class="ti ti-plus"></i>
 					<p v-if="(appearNote.reactionAcceptance === 'likeOnly' || prefer.s.showReactionsCount) && $appearNote.reactionCount > 0" :class="$style.noteFooterButtonCount">{{ number($appearNote.reactionCount) }}</p>
 				</button>
@@ -541,24 +542,27 @@ async function react() {
 	}
 }
 
-function undoReact(targetNote: Misskey.entities.Note): void {
-	const oldReaction = targetNote.myReaction;
-	if (!oldReaction) return;
+function undoReact(targetNote: Misskey.entities.Note, reaction?: string): void {
+	const oldReactions = targetNote.myReaction;
+	if (!oldReactions || oldReactions.length === 0) return;
+	const targetReaction = reaction ?? oldReactions[0];
 	misskeyApi('notes/reactions/delete', {
 		noteId: targetNote.id,
+		reaction: targetReaction,
 	}).then(() => {
 		noteEvents.emit(`unreacted:${appearNote.id}`, {
 			userId: $i!.id,
-			reaction: oldReaction,
+			reaction: targetReaction,
 		});
 	});
 }
 
 function toggleReact() {
-	if (appearNote.myReaction == null) {
-		react();
-	} else {
+	// リモートノートは1リアクションのみ: リアクション済みならトグルで取り消し
+	if (appearNote.uri != null && $appearNote.myReaction != null) {
 		undoReact(appearNote);
+	} else {
+		react();
 	}
 }
 

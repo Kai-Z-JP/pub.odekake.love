@@ -60,8 +60,12 @@ const initialReactions = new Set(Object.keys(props.reactions));
 const _reactions = ref<[string, number][]>([]);
 const hasMoreReactions = ref(false);
 
-if (props.myReaction != null && !(props.myReaction in props.reactions)) {
-	_reactions.value.push([props.myReaction, props.reactions[props.myReaction]]);
+if (props.myReaction != null) {
+	for (const r of props.myReaction) {
+		if (!(r in props.reactions)) {
+			_reactions.value.push([r, props.reactions[r]]);
+		}
+	}
 }
 
 function onMockToggleReaction(emoji: string, count: number) {
@@ -109,8 +113,13 @@ watch([() => props.reactions, () => props.maxNumber], ([newSource, maxNumber]) =
 
 	newReactions = newReactions.slice(0, props.maxNumber);
 
-	if (props.myReaction && !newReactions.map(([x]) => x).includes(props.myReaction)) {
-		newReactions.push([props.myReaction, newSource[props.myReaction]]);
+	if (props.myReaction) {
+		const shownReactions = newReactions.map(([x]) => x);
+		for (const r of props.myReaction) {
+			if (!shownReactions.includes(r)) {
+				newReactions.push([r, newSource[r]]);
+			}
+		}
 	}
 
 	_reactions.value = newReactions;

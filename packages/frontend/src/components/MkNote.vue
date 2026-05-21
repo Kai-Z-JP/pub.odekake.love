@@ -146,8 +146,9 @@ SPDX-License-Identifier: AGPL-3.0-only
 				</button>
 				<button ref="reactButton" :class="$style.footerButton" class="_button" @click="toggleReact()">
 					<i v-if="appearNote.reactionAcceptance === 'likeOnly' && $appearNote.myReaction != null" class="ti ti-heart-filled" style="color: var(--MI_THEME-love);"></i>
-					<i v-else-if="$appearNote.myReaction != null" class="ti ti-minus" style="color: var(--MI_THEME-accent);"></i>
 					<i v-else-if="appearNote.reactionAcceptance === 'likeOnly'" class="ti ti-heart"></i>
+					<i v-else-if="$appearNote.myReaction != null && appearNote.uri != null" class="ti ti-minus" style="color: var(--MI_THEME-accent);"></i>
+					<i v-else-if="$appearNote.myReaction != null" class="ti ti-plus" style="color: var(--MI_THEME-accent);"></i>
 					<i v-else class="ti ti-plus"></i>
 					<p v-if="(appearNote.reactionAcceptance === 'likeOnly' || prefer.s.showReactionsCount) && $appearNote.reactionCount > 0" :class="$style.footerButtonCount">{{ number($appearNote.reactionCount) }}</p>
 				</button>
@@ -544,7 +545,7 @@ async function react() {
 				emit('reaction', reaction);
 				$appearNote.reactions[reaction] = 1;
 				$appearNote.reactionCount++;
-				$appearNote.myReaction = reaction;
+				$appearNote.myReaction = [...($appearNote.myReaction ?? []), reaction];
 				return;
 			}
 
@@ -567,30 +568,34 @@ async function react() {
 	}
 }
 
-function undoReact(): void {
-	const oldReaction = $appearNote.myReaction;
-	if (!oldReaction) return;
+function undoReact(reaction?: string): void {
+	const oldReactions = $appearNote.myReaction;
+	if (!oldReactions || oldReactions.length === 0) return;
+
+	const targetReaction = reaction ?? oldReactions[0];
 
 	if (props.mock) {
-		emit('removeReaction', oldReaction);
+		emit('removeReaction', targetReaction);
 		return;
 	}
 
 	misskeyApi('notes/reactions/delete', {
 		noteId: appearNote.id,
+		reaction: targetReaction,
 	}).then(() => {
 		noteEvents.emit(`unreacted:${appearNote.id}`, {
 			userId: $i!.id,
-			reaction: oldReaction,
+			reaction: targetReaction,
 		});
 	});
 }
 
 function toggleReact() {
-	if ($appearNote.myReaction == null) {
-		react();
-	} else {
+	// リモートノートは1リアクションのみ: リアクション済みならトグルで取り消し
+	if (appearNote.uri != null && $appearNote.myReaction != null) {
 		undoReact();
+	} else {
+		react();
 	}
 }
 
