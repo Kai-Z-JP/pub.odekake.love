@@ -9916,6 +9916,36 @@ export interface Locale extends ILocale {
          * ダイレクトメッセージ
          */
         "chat": string;
+        /**
+         * 絵文字ランキング
+         */
+        "emojiRanking": string;
+        "_emojiRanking": {
+            /**
+             * 集計期間
+             */
+            "period": string;
+            /**
+             * 全期間
+             */
+            "periodAll": string;
+            /**
+             * 1時間
+             */
+            "period1h": string;
+            /**
+             * 24時間
+             */
+            "period24h": string;
+            /**
+             * 7日間
+             */
+            "period7d": string;
+            /**
+             * 30日間
+             */
+            "period30d": string;
+        };
     };
     "_widgetOptions": {
         /**

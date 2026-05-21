@@ -2608,6 +2608,14 @@ _widgets:
   clicker: "クリッカー"
   birthdayFollowings: "もうすぐ誕生日のユーザー"
   chat: "ダイレクトメッセージ"
+  emojiRanking: "絵文字ランキング"
+  _emojiRanking:
+    period: "集計期間"
+    periodAll: "全期間"
+    period1h: "1時間"
+    period24h: "24時間"
+    period7d: "7日間"
+    period30d: "30日間"
 
 _widgetOptions:
   showHeader: "ヘッダーを表示"

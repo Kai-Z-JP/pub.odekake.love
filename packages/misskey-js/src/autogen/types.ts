@@ -3146,6 +3146,15 @@ export type paths = {
          */
         post: operations['notes___reactions'];
     };
+    '/notes/reactions-ranking': {
+        /**
+         * notes/reactions-ranking
+         * @description No description provided.
+         *
+         *     **Credential required**: *No*
+         */
+        post: operations['notes___reactions-ranking'];
+    };
     '/notes/reactions/create': {
         /**
          * notes/reactions/create
@@ -30534,6 +30543,80 @@ export interface operations {
                 };
                 content: {
                     'application/json': components['schemas']['NoteReaction'][];
+                };
+            };
+            /** @description Client error */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    'application/json': components['schemas']['Error'];
+                };
+            };
+            /** @description Authentication error */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    'application/json': components['schemas']['Error'];
+                };
+            };
+            /** @description Forbidden error */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    'application/json': components['schemas']['Error'];
+                };
+            };
+            /** @description I'm Ai */
+            418: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    'application/json': components['schemas']['Error'];
+                };
+            };
+            /** @description Internal server error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    'application/json': components['schemas']['Error'];
+                };
+            };
+        };
+    };
+    'notes___reactions-ranking': {
+        requestBody: {
+            content: {
+                'application/json': {
+                    /** @default 10 */
+                    limit?: number;
+                    /**
+                     * @default all
+                     * @enum {string}
+                     */
+                    period?: 'all' | '1h' | '24h' | '7d' | '30d';
+                };
+            };
+        };
+        responses: {
+            /** @description OK (with results) */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    'application/json': {
+                        reaction: string;
+                        count: number;
+                    }[];
                 };
             };
             /** @description Client error */
