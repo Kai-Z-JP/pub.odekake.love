@@ -135,7 +135,7 @@ export class NoteEntityService implements OnModuleInit {
 
 		if (packedNote.localOnly) {
 			if (meId == null) {
-				hide = true;
+				return true;
 			}
 		}
 

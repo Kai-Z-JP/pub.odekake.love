@@ -136,6 +136,12 @@ export class FanoutTimelineEndpointService {
 
 					return parentFilter(note);
 				};
+			} else {
+				const parentFilter = filter;
+				filter = (note) => {
+					if (note.localOnly) return false;
+					return parentFilter(note);
+				};
 			}
 
 			{
@@ -162,12 +168,6 @@ export class FanoutTimelineEndpointService {
 
 					return parentFilter(note);
 				};
-			} else {
-				const parentFilter = filter;
-				filter = (note) => {
-					if (note.localOnly) return false;
-					return parentFilter(note);
-				}
 			}
 
 			const redisTimeline: MiNote[] = [];
@@ -213,7 +213,7 @@ export class FanoutTimelineEndpointService {
 
 	private async getAndFilterFromDb(noteIds: string[], noteFilter: NoteFilter, idCompare: (a: string, b: string) => number): Promise<MiNote[]> {
 		const query = this.notesRepository.createQueryBuilder('note')
-			.where('note.id IN (:...noteIds)', {noteIds: noteIds})
+			.where('note.id IN (:...noteIds)', { noteIds: noteIds })
 			.innerJoinAndSelect('note.user', 'user')
 			.leftJoinAndSelect('note.reply', 'reply')
 			.leftJoinAndSelect('note.renote', 'renote')

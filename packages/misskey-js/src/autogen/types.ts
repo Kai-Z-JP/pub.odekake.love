@@ -4096,8 +4096,8 @@ export type components = {
             /** @enum {string} */
             notify?: 'normal' | 'none';
             withReplies?: boolean;
-			oskyEmojiCreationCount?: number;
-			oskyEmojiDeletionCount?: number;
+            oskyEmojiCreationCount?: number;
+            oskyEmojiDeletionCount?: number;
         };
         MeDetailedOnly: {
             /** Format: id */
@@ -7865,7 +7865,7 @@ export interface operations {
         requestBody: {
             content: {
                 'application/json': {
-                    name: string;
+                    name?: string;
                     /** Format: misskey:id */
                     fileId: string;
                     /** @description Use `null` to reset the category. */
