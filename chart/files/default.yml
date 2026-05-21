@@ -190,6 +190,9 @@ id: "aidx"
 # Number of worker processes
 #clusterLimit: 1
 
+# Number of threads of extra thread pool for CPU-intensive tasks (per worker)
+#threadPoolSize: 1
+
 # Job concurrency per worker
 # deliverJobConcurrency: 128
 # inboxJobConcurrency: 16
@@ -220,9 +223,6 @@ id: "aidx"
 
 # Media Proxy
 #mediaProxy: https://example.com/proxy
-
-# Sign to ActivityPub GET request (default: true)
-signToActivityPubGet: true
 
 #allowedPrivateNetworks: [
 #  '127.0.0.1/32'
