@@ -26,7 +26,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 </template>
 
 <script lang="ts" setup>
-import { ref } from 'vue';
+import { ref, watch } from 'vue';
 import { useInterval } from '@@/js/use-interval.js';
 import { useWidgetPropsManager } from './widget.js';
 import type { WidgetComponentEmits, WidgetComponentExpose, WidgetComponentProps } from './widget.js';
@@ -92,6 +92,10 @@ const loadRanking = () => {
 useInterval(loadRanking, 1000 * 60, {
 	immediate: true,
 	afterMounted: true,
+});
+
+watch(() => [widgetProps.period, widgetProps.limit], () => {
+	loadRanking();
 });
 
 defineExpose<WidgetComponentExpose>({
