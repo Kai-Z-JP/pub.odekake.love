@@ -290,7 +290,10 @@ export class ReactionService {
 
 	@bindThis
 	public async delete(user: { id: MiUser['id']; host: MiUser['host']; isBot: MiUser['isBot']; }, note: MiNote, reaction?: string) {
-		const findCriteria = { noteId: note.id, userId: user.id, reaction };
+		// Frontend sends decoded form ':name@.:' but DB stores ':name:' for local custom emojis
+		const dbReaction = reaction?.replace(/^:([\w+-]+)@\.:$/, ':$1:');
+
+		const findCriteria = { noteId: note.id, userId: user.id, reaction: dbReaction };
 
 		const exists = await this.noteReactionsRepository.findBy(findCriteria);
 
