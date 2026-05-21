@@ -564,7 +564,7 @@ async function react() {
 			}
 		}, () => {
 			focus();
-		});
+		}, appearNote.uri == null);
 	}
 }
 
