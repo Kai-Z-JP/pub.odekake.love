@@ -290,13 +290,9 @@ export class ReactionService {
 
 	@bindThis
 	public async delete(user: { id: MiUser['id']; host: MiUser['host']; isBot: MiUser['isBot']; }, note: MiNote, reaction?: string) {
-		const findCriteria = reaction
-			? { noteId: note.id, userId: user.id, reaction }
-			: { noteId: note.id, userId: user.id };
+		const findCriteria = { noteId: note.id, userId: user.id, reaction };
 
-		const exists = reaction
-			? [await this.noteReactionsRepository.findOneBy(findCriteria)].filter(Boolean) as MiNoteReaction[]
-			: await this.noteReactionsRepository.findBy(findCriteria);
+		const exists = await this.noteReactionsRepository.findBy(findCriteria);
 
 		if (exists.length === 0) {
 			throw new IdentifiableError('60527ec9-b4cb-4a88-a6bd-32d3ad26817d', 'not reacted');
